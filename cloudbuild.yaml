@@ -1,0 +1,77 @@
+steps:
+  # Step 1: Git Clone
+#  - name: 'gcr.io/cloud-builders/git'
+#    args: ['clone', 'https://github.com/ashiphsayyad32/User-Management-Java.git', 'source']
+
+  # Build the Maven project
+  - name: 'maven:3-eclipse-temurin-17-alpine'
+    entrypoint: 'mvn'
+    args: ['clean', 'install']
+
+  # Containerize APP (docker build)
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 'build', '-t', 'us-central1-docker.pkg.dev/ashiph/user-management-repo/user-management:$SHORT_SHA', '.' ]
+
+  # Docker push to Google Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 'push',  'us-central1-docker.pkg.dev/ashiph/user-management-repo/user-management:$SHORT_SHA' ]
+
+  # Deploy GAR image to App Engine
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args: [ 'app', 'deploy', '--image-url', 'us-central1-docker.pkg.dev/ashiph/user-management-repo/user-management:$SHORT_SHA' ]
+
+images:
+  - 'us-central1-docker.pkg.dev/ashiph/user-management-repo/user-management:$SHORT_SHA'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+
+#steps:
+#  # Step 1: Git Clone (if needed)
+#  # - name: 'gcr.io/cloud-builders/git'
+#  #   args: ['clone', 'https://github.com/ashiphsayyad32/User-Management-Java.git', 'source']
+#
+#  # Build the Maven project
+#  - name: 'maven:3-eclipse-temurin-17-alpine'
+#    entrypoint: 'mvn'
+#    args: ['clean', 'install']
+#
+#  # Replace placeholders in application.properties
+#  - name: 'gcr.io/cloud-builders/sed'
+#    args: ['-i', '-e', 's/\${MYSQL_HOST}/${_MYSQL_HOST}/g', '-e', 's/\${MYSQL_DB_NAME}/${_MYSQL_DB_NAME}/g', '-e', 's/\${MYSQL_USERNAME}/${_MYSQL_USERNAME}/g', '-e', 's/\${MYSQL_PASSWORD}/${_MYSQL_PASSWORD}/g', 'src/main/resources/application-test.properties']
+#
+#  # Containerize APP (docker build)
+#  - name: 'gcr.io/cloud-builders/docker'
+#    args: [ 'build',
+#            '-t',
+#            'us-central1-docker.pkg.dev/ashiph/user-management-repo/user-management:$SHORT_SHA',
+#            '--build-arg', 'MYSQL_HOST=${_MYSQL_HOST}',
+#            '--build-arg', 'MYSQL_DB_NAME=${_MYSQL_DB_NAME}',
+#            '--build-arg', 'MYSQL_USERNAME=${_MYSQL_USERNAME}',
+#            '--build-arg', 'MYSQL_PASSWORD=${_MYSQL_PASSWORD}',
+#            '.'
+#    ]
+#
+#  # Docker push to Google Artifact Registry
+#  - name: 'gcr.io/cloud-builders/docker'
+#    args: [ 'push',  'us-central1-docker.pkg.dev/ashiph/user-management-repo/user-management:$SHORT_SHA' ]
+#
+#  # Deploy GAR image to App Engine
+#  - name: 'gcr.io/cloud-builders/gcloud'
+#    args: [ 'app', 'deploy',
+#            '--image-url',
+#            'us-central1-docker.pkg.dev/ashiph/user-management-repo/user-management:$SHORT_SHA'
+#    ]
+#
+#images:
+#  - 'us-central1-docker.pkg.dev/ashiph/user-management-repo/user-management:$SHORT_SHA'
+#
+#options:
+#  logging: CLOUD_LOGGING_ONLY
+#
+#substitutions:
+#  _MYSQL_HOST: $$_MYSQL_HOST
+#  _MYSQL_DB_NAME: $$_MYSQL_DB_NAME
+#  _MYSQL_USERNAME: $$_MYSQL_USERNAME
+#  _MYSQL_PASSWORD: $$_MYSQL_PASSWORD

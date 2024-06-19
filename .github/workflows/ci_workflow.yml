@@ -1,0 +1,31 @@
+name: Java CI with Maven
+
+on:
+  push:
+    branches: [ "pr" ]
+
+jobs:
+  ci-job:
+
+    runs-on: ubuntu-latest
+    env:
+      MYSQL_HOST: ${{ secrets.MYSQL_HOST }}
+      MYSQL_DB_NAME: ${{ secrets.MYSQL_DB_NAME }}
+      MYSQL_USERNAME: ${{ secrets.MYSQL_USERNAME }}
+      MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+    - name: Run Unit Test Cases
+      run: mvn clean install
+    - name: Generate Jacoco Code Coverage Report
+      run: mvn jacoco:report
+    - name: Display Jacoco Code Coverage
+      run: grep -oE '<span class="ctr[^>]*>[0-9]+%' target/site/jacoco/index.html | sed 's/<[^>]*>//g' | awk '{ total += substr($1, 1, length($1)-1); count++ } END { if (count > 0) { print total/count "%"; } else { print "N/A"; }}'
+
+
